@@ -14,6 +14,8 @@ import Button from '../components/Button';
 import colors from '../constants/colors';
 import typography from '../constants/typography';
 import { validateEmail, validatePassword } from '../utils/validation';
+import { login } from '../services/api';
+import { saveToken } from '../utils/storage';
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState('');
@@ -34,7 +36,7 @@ export default function LoginScreen({ navigation }) {
     if (errors.password) setErrors({ ...errors, password: validatePassword(text) });
   };
 
-  const handleLogin = async () => {
+    const handleLogin = async () => {
     const emailError = validateEmail(email);
     const passwordError = validatePassword(password);
     setErrors({ email: emailError, password: passwordError });
@@ -43,11 +45,23 @@ export default function LoginScreen({ navigation }) {
     if (emailError || passwordError) return;
 
     setLoading(true);
-    // TODO (Task B1.6): replace this fake delay with the real API call
-    setTimeout(() => {
-      setLoading(false);
-      setFormError('Login API not connected yet');
-    }, 1500);
+    const result = await login(email.trim(), password);
+    setLoading(false);
+
+    if (!result.success) {
+      setFormError(result.error);
+      return;
+    }
+
+    // Token might be at data.token or data.data.token depending on Person A's response
+    const token = result.data?.token || result.data?.data?.token;
+    if (!token) {
+      setFormError('Login succeeded but no token was received.');
+      return;
+    }
+
+    await saveToken(token);
+    navigation.reset({ index: 0, routes: [{ name: 'Home' }] });
   };
 
   return (

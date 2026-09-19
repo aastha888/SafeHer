@@ -21,6 +21,9 @@ import {
   validateConfirmPassword,
 } from '../utils/validation';
 
+import { register, login } from '../services/api';
+import { saveToken } from '../utils/storage';
+
 const EMPTY_ERRORS = {
   fullName: '',
   email: '',
@@ -77,7 +80,7 @@ export default function RegisterScreen({ navigation }) {
     }
   };
 
-  const handleRegister = async () => {
+    const handleRegister = async () => {
     const newErrors = {
       fullName: validateName(form.fullName),
       email: validateEmail(form.email),
@@ -92,11 +95,37 @@ export default function RegisterScreen({ navigation }) {
     if (hasErrors) return;
 
     setLoading(true);
-    // TODO (Task B1.6): replace this fake delay with the real API call
-    setTimeout(() => {
+
+    const result = await register(
+      form.email.trim(),
+      form.password,
+      form.phone.trim(),
+      form.fullName.trim()
+    );
+
+    if (!result.success) {
       setLoading(false);
-      setFormError('Register API not connected yet');
-    }, 1500);
+      setFormError(result.error);
+      return;
+    }
+
+    // Registration worked, now log in automatically
+    const loginResult = await login(form.email.trim(), form.password);
+    setLoading(false);
+
+    if (!loginResult.success) {
+      // Account exists, so send them to Login to sign in manually
+      navigation.navigate('Login');
+      return;
+    }
+
+    const token = loginResult.data?.token || loginResult.data?.data?.token;
+    if (token) {
+      await saveToken(token);
+      navigation.reset({ index: 0, routes: [{ name: 'Home' }] });
+    } else {
+      navigation.navigate('Login');
+    }
   };
 
   return (
