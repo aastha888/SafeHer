@@ -40,20 +40,15 @@ const userSchema = new mongoose.Schema({
 });
 
 // Index email and phone for faster lookups
-userSchema.index({ email: 1 });
+
 userSchema.index({ phone: 1 });
 
 // Hash password before saving
-userSchema.pre('save', async function (next) {
-  if (!this.isModified('password_hash')) return next();
+userSchema.pre('save', async function () {
+  if (!this.isModified('password_hash')) return;
 
-  try {
-    const salt = await bcrypt.genSalt(10);
-    this.password_hash = await bcrypt.hash(this.password_hash, salt);
-    next();
-  } catch (error) {
-    next(error);
-  }
+  const salt = await bcrypt.genSalt(10);
+  this.password_hash = await bcrypt.hash(this.password_hash, salt);
 });
 
 // Compare entered password with hashed password

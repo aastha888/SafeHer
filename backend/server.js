@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const connectDB = require('./config/database');
 const { authenticate } = require('./middleware/auth');
+const authRoutes = require('./routes/auth');
 
 // Connect to MongoDB
 connectDB();
@@ -17,6 +18,9 @@ app.use(express.json());
 app.get('/', (req, res) => {
   res.json({ message: 'SafeHer backend is running' });
 });
+
+// Auth routes
+app.use('/api/auth', authRoutes);
 
 // Temporary test route to verify JWT middleware
 app.get('/test-auth', authenticate, (req, res) => {
