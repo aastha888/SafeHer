@@ -4,6 +4,9 @@ const cors = require('cors');
 const connectDB = require('./config/database');
 const { authenticate } = require('./middleware/auth');
 const authRoutes = require('./routes/auth');
+const contactRoutes = require('./routes/contacts');
+const userRoutes = require('./routes/users');
+const locationRoutes = require('./routes/locations');
 
 // Connect to MongoDB
 connectDB();
@@ -21,6 +24,15 @@ app.get('/', (req, res) => {
 
 // Auth routes
 app.use('/api/auth', authRoutes);
+
+// Contact routes
+app.use('/api/contacts', contactRoutes);
+
+// User routes
+app.use('/api/users', userRoutes);
+
+// Location routes
+app.use('/api/locations', locationRoutes);
 
 // Temporary test route to verify JWT middleware
 app.get('/test-auth', authenticate, (req, res) => {
