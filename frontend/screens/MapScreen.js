@@ -3,18 +3,27 @@ import { View, Text, ActivityIndicator, StyleSheet, Linking } from 'react-native
 import colors from '../constants/colors';
 import Button from '../components/Button';
 import { getCurrentLocation } from '../services/LocationService';
+import { sendLocation } from '../services/BackendLocationService';
 
 export default function MapScreen({ navigation }) {
   const [location, setLocation] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState('');  
+    const [syncStatus, setSyncStatus] = useState('Not sent yet');
 
   const loadLocation = async () => {
     setLoading(true);
     setError('');
+    setSyncStatus('Sending to server...');
     const result = await getCurrentLocation();
     if (result.success) {
       setLocation(result.location);
+      const sync = await sendLocation(result.location);
+      if (sync.success) {
+        setSyncStatus('Sent to server at ' + new Date().toLocaleTimeString());
+      } else {
+        setSyncStatus('Not sent: ' + sync.error);
+      }
     } else {
       setError(result.error);
     }
@@ -59,6 +68,7 @@ export default function MapScreen({ navigation }) {
       <Text style={styles.value}>
         Updated: {new Date(location.timestamp).toLocaleTimeString()}
       </Text>
+            <Text style={styles.value}>Server: {syncStatus}</Text>
       <View style={{ height: 24 }} />
       <Button title="Open in Google Maps" onPress={openInGoogleMaps} />
       <View style={{ height: 12 }} />
