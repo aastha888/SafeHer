@@ -5,6 +5,7 @@ const connectDB = require('./config/database');
 const { authenticate } = require('./middleware/auth');
 const authRoutes = require('./routes/auth');
 const contactRoutes = require('./routes/contacts');
+const userRoutes = require('./routes/users');
 
 // Connect to MongoDB
 connectDB();
@@ -25,6 +26,9 @@ app.use('/api/auth', authRoutes);
 
 // Contact routes
 app.use('/api/contacts', contactRoutes);
+
+// User routes
+app.use('/api/users', userRoutes);
 
 // Temporary test route to verify JWT middleware
 app.get('/test-auth', authenticate, (req, res) => {
