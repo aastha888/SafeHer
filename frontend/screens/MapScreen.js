@@ -4,6 +4,7 @@ import colors from '../constants/colors';
 import Button from '../components/Button';
 import { getCurrentLocation } from '../services/LocationService';
 import { sendLocation } from '../services/BackendLocationService';
+import { startTracking, stopTracking } from '../services/TrackingService';
 
 export default function MapScreen({ navigation }) {
   const [location, setLocation] = useState(null);
@@ -11,27 +12,24 @@ export default function MapScreen({ navigation }) {
   const [error, setError] = useState('');  
     const [syncStatus, setSyncStatus] = useState('Not sent yet');
 
-  const loadLocation = async () => {
+    const loadLocation = async () => {
     setLoading(true);
     setError('');
-    setSyncStatus('Sending to server...');
     const result = await getCurrentLocation();
     if (result.success) {
       setLocation(result.location);
-      const sync = await sendLocation(result.location);
-      if (sync.success) {
-        setSyncStatus('Sent to server at ' + new Date().toLocaleTimeString());
-      } else {
-        setSyncStatus('Not sent: ' + sync.error);
-      }
     } else {
       setError(result.error);
     }
     setLoading(false);
   };
-
   useEffect(() => {
     loadLocation();
+  }, []);
+  
+  useEffect(() => {
+    startTracking((message) => setSyncStatus(message));
+    return () => stopTracking();
   }, []);
 
   const openInGoogleMaps = () => {
