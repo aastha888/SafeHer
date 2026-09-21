@@ -1,5 +1,6 @@
 import { getCurrentLocation } from './LocationService';
 import { sendLocation } from './BackendLocationService';
+import { addToQueue, flushQueue, getQueueSize } from './LocationQueue';
 
 const SEND_INTERVAL_MS = 30000; // 30 seconds
 const MIN_MOVE_METERS = 10; // don't send if moved less than this
@@ -26,6 +27,17 @@ async function trackOnce(onStatus) {
   if (busy) return;
   busy = true;
   try {
+    // 1. Send anything saved while the network was down.
+    const waiting = await getQueueSize();
+    if (waiting > 0) {
+      onStatus('Syncing ' + waiting + ' saved location(s)...');
+      const flushed = await flushQueue();
+      if (flushed.remaining > 0) {
+        onStatus('Offline: ' + flushed.remaining + ' location(s) waiting to sync');
+      }
+    }
+
+    // 2. Read the current location.
     const result = await getCurrentLocation();
     if (!result.success) {
       onStatus('Location error: ' + result.error);
@@ -34,7 +46,8 @@ async function trackOnce(onStatus) {
 
     const current = result.location;
 
-      if (lastSent) {
+    // 3. Skip if the phone has not moved enough.
+    if (lastSent) {
       const moved = distanceInMeters(lastSent, current);
       if (moved < MIN_MOVE_METERS) {
         onStatus(
@@ -45,18 +58,21 @@ async function trackOnce(onStatus) {
       }
     }
 
+    // 4. Send it. If it fails, save it for later.
     const sync = await sendLocation(current);
     if (sync.success) {
       lastSent = current;
       onStatus('Sent to server at ' + new Date().toLocaleTimeString());
     } else {
-      onStatus('Not sent: ' + sync.error);
+      await addToQueue(current);
+      lastSent = current;
+      const size = await getQueueSize();
+      onStatus('Offline: saved ' + size + ' location(s) to send later');
     }
   } finally {
     busy = false;
   }
 }
-
 // Start sending automatically. Returns { success: true } or { success: false, error }.
 export function startTracking(onStatus) {
   if (timerId) {
