@@ -80,11 +80,35 @@ The function checks the phone number format (international, starting with `+`) a
 - **Trial accounts can only send predefined templates.** Sending custom text through the API fails with `Invalid template name. Trial accounts can only use predefined SMS templates.` A trial call must use a template name, for example `sms_appointment_reminders`.
 - Custom emergency messages (such as the `emergencySOS` template) need a paid Twilio account or a different SMS provider.
 
-## Maps and location (from Week 2)
+## Maps and location
 
-- Add your Google Maps key to `backend/.env` as `GOOGLE_MAPS_API_KEY`.
-- The mobile app needs location permission. Test on a real device, not a simulator.
-- Details will be added here during Week 2.
+Code: `frontend/services/LocationService.js`, `frontend/services/BackendLocationService.js`, `frontend/services/TrackingService.js`, `frontend/services/LocationQueue.js`, `frontend/screens/MapScreen.js`, `frontend/components/LocationMap.js`
+
+### Location permissions
+
+- **Android:** `ACCESS_COARSE_LOCATION` and `ACCESS_FINE_LOCATION` are declared in `frontend/app.json` under `android.permissions`.
+- **iPhone:** the `expo-location` plugin in `app.json` sets the permission message. An `ios.infoPlist` entry (`NSLocationWhenInUseUsageDescription`) still has to be added before an iPhone build.
+- The app only asks for location **while it is in use**. Background tracking is not enabled.
+- Test on a real device. GPS does not work properly in an emulator or simulator.
+
+### GPS (no key needed)
+
+`expo-location` reads the phone's GPS and needs no API key. It works in Expo Go on an Android phone.
+
+### Map display and the Google Maps key
+
+- `LocationMap.js` draws a real map (marker, accuracy circle, Center and Satellite buttons) using `react-native-maps`.
+- On Android, Google Maps needs an **API key** to download map tiles. Without one the map area stays blank, even though the location itself is correct.
+- Because no key has been set up yet, the Map screen currently shows the coordinates, accuracy, time and an **Open in Google Maps** button, and does not use `LocationMap.js`.
+- To use the real map later: create a Google Cloud project with billing enabled, enable **Maps SDK for Android**, create an API key, restrict it to the app, and add it to `app.json` under `android.config.googleMaps.apiKey`. Then switch `MapScreen.js` to render `LocationMap`.
+- Always restrict the key in Google Cloud (to the Android app and to the Maps SDK only). A key placed in `app.json` ends up inside the built app, so a restriction is what stops others from using it.
+
+### Sending location to the backend
+
+- The app sends `latitude`, `longitude` and `accuracy` to `POST /api/locations` with the login token (added automatically by `frontend/services/api.js`).
+- Tracking runs every 30 seconds while the Map screen is open and skips sending when the phone has moved less than 10 metres.
+- Locations that cannot be sent are saved on the phone (up to 500) and uploaded, oldest first, when the server can be reached again.
+- Known limit: the backend stores its own time for each record, so locations uploaded after being offline show the upload time, not the time they were read.
 
 ## How to test your setup
 
