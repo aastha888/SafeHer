@@ -11,7 +11,7 @@ const TEST_CONTACT = {
   name: 'Priya Sharma',
   phone: '9876543210',
   relationship: 'family',
-  is_verified: true,
+  is_primary: true,
 };
 
 export default function HomeScreen({ navigation }) {
@@ -44,6 +44,12 @@ export default function HomeScreen({ navigation }) {
         <View style={styles.gap}><Button title="Show Spinner (2s)" onPress={showSpinner} /></View>
         <View style={styles.gap}>
           <Button title="Back to Login" variant="secondary" onPress={() => navigation.navigate('Login')} />
+        </View>
+        <View style={styles.gap}>
+          <Button
+             title="Emergency Contacts"
+              onPress={() => navigation.navigate('EmergencyContacts')}
+          />
         </View>
       </ScrollView>
 

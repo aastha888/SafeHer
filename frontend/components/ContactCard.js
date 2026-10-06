@@ -5,7 +5,7 @@ import colors from '../constants/colors';
 import typography from '../constants/typography';
 
 export default function ContactCard({ contact, onEdit, onDelete }) {
-  const { name, phone, relationship, is_verified } = contact;
+  const { name, phone, relationship, is_primary } = contact;
 
   return (
     <View style={styles.card}>
@@ -17,9 +17,9 @@ export default function ContactCard({ contact, onEdit, onDelete }) {
         <View style={styles.info}>
           <View style={styles.nameRow}>
             <Text style={styles.name} numberOfLines={1}>{name}</Text>
-            {is_verified ? (
+            {is_primary ? (
               <View style={styles.badge}>
-                <Text style={styles.badgeText}>✓ Verified</Text>
+                <Text style={styles.badgeText}>★ Primary</Text>
               </View>
             ) : null}
           </View>
