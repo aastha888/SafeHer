@@ -1,4 +1,4 @@
-require('dotenv').config();
+const config = require('./config/env'); // loads .env and stops the server if config is invalid
 const express = require('express');
 const cors = require('cors');
 const connectDB = require('./config/database');
@@ -39,10 +39,10 @@ app.get('/test-auth', authenticate, (req, res) => {
   res.json({ success: true, message: 'You are authenticated!', userId: req.user.id });
 });
 
-const PORT = process.env.PORT || 5000;
+const PORT = config.port;
 
 const server = app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+ console.log(`Server running on port ${PORT} (${config.nodeEnv})`);
 });
 
 // Graceful shutdown
