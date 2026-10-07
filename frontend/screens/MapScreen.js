@@ -2,17 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet, Linking } from 'react-native';
 import colors from '../constants/colors';
 import Button from '../components/Button';
+import LocationMap from '../components/LocationMap';
 import { getCurrentLocation } from '../services/LocationService';
-import { sendLocation } from '../services/BackendLocationService';
 import { startTracking, stopTracking } from '../services/TrackingService';
 
 export default function MapScreen({ navigation }) {
   const [location, setLocation] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');  
-    const [syncStatus, setSyncStatus] = useState('Not sent yet');
+  const [error, setError] = useState('');
+  const [syncStatus, setSyncStatus] = useState('Not sent yet');
 
-    const loadLocation = async () => {
+  const loadLocation = async () => {
     setLoading(true);
     setError('');
     const result = await getCurrentLocation();
@@ -23,10 +23,11 @@ export default function MapScreen({ navigation }) {
     }
     setLoading(false);
   };
+
   useEffect(() => {
     loadLocation();
   }, []);
-  
+
   useEffect(() => {
     startTracking((message) => setSyncStatus(message));
     return () => stopTracking();
@@ -58,42 +59,60 @@ export default function MapScreen({ navigation }) {
   }
 
   return (
-    <View style={styles.centered}>
-      <Text style={styles.title}>Your Location</Text>
-      <Text style={styles.value}>Latitude: {location.latitude.toFixed(5)}</Text>
-      <Text style={styles.value}>Longitude: {location.longitude.toFixed(5)}</Text>
-      <Text style={styles.value}>Accuracy: {Math.round(location.accuracy || 0)} m</Text>
-      <Text style={styles.value}>
-        Updated: {new Date(location.timestamp).toLocaleTimeString()}
-      </Text>
-            <Text style={styles.value}>Server: {syncStatus}</Text>
-      <View style={{ height: 24 }} />
-      <Button title="Open in Google Maps" onPress={openInGoogleMaps} />
-      <View style={{ height: 12 }} />
-      <Button title="Refresh Location" onPress={loadLocation} />
-      <View style={{ height: 12 }} />
-      <Button title="Back" onPress={() => navigation.goBack()} />
+    <View style={styles.screen}>
+      <View style={styles.mapArea}>
+        <LocationMap location={location} />
+      </View>
+
+      <View style={styles.panel}>
+        <Text style={styles.status}>Server: {syncStatus}</Text>
+        <View style={styles.row}>
+          <View style={styles.rowItem}>
+            <Button title="Refresh" onPress={loadLocation} />
+          </View>
+          <View style={{ width: 12 }} />
+          <View style={styles.rowItem}>
+            <Button title="Google Maps" onPress={openInGoogleMaps} />
+          </View>
+        </View>
+        <View style={{ height: 12 }} />
+        <Button title="Back" onPress={() => navigation.goBack()} />
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  screen: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  mapArea: {
+    flex: 1,
+  },
+  panel: {
+    padding: 16,
+    paddingBottom: 32,
+    backgroundColor: colors.background,
+  },
+  status: {
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: 12,
+    color: colors.textLight,
+  },
+  row: {
+    flexDirection: 'row',
+  },
+  rowItem: {
+    flex: 1,
+  },
   centered: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 24,
     backgroundColor: colors.background,
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: '700',
-    marginBottom: 16,
-    color: colors.primary,
-  },
-  value: {
-    fontSize: 16,
-    marginBottom: 6,
   },
   message: {
     marginTop: 16,
