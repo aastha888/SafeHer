@@ -143,5 +143,5 @@ If you tapped **Deny** by mistake, open the phone's **Settings > Apps > Expo Go 
 | Status says "Not sent: Cannot reach the server" | Check the phone and computer are on the same Wi-Fi, the backend is running, and `API_BASE_URL` has your current address |
 | Status says "No movement (moved X m, needs 10 m)" | Normal while standing still. Move more than 10 m and wait for the next check |
 | Status says "Offline: saved N location(s)" | The server could not be reached. The locations upload automatically once it can |
-| Uploaded offline locations show the upload time | The backend stores its own time for each record. This is a known limit |
+
 | Location stops updating | Tracking only runs while the Map screen is open. Keep the screen on and do not press Back |

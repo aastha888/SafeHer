@@ -108,10 +108,10 @@ Code: `frontend/services/LocationService.js`, `frontend/services/BackendLocation
 
 ### Sending location to the backend
 
-- The app sends `latitude`, `longitude` and `accuracy` to `POST /api/locations` with the login token (added automatically by `frontend/services/api.js`).
+- The app sends `latitude`, `longitude`, `accuracy` and `timestamp` (the time the phone read the position) to `POST /api/locations` with the login token (added automatically by `frontend/services/api.js`).
 - Tracking runs every 30 seconds while the Map screen is open and skips sending when the phone has moved less than 10 metres.
 - Locations that cannot be sent are saved on the phone (up to 500) and uploaded, oldest first, when the server can be reached again.
-- Known limit: the backend stores its own time for each record, so locations uploaded after being offline show the upload time, not the time they were read.
+- The app sends `latitude`, `longitude`, `accuracy` and `timestamp` (the time the phone read the position) to `POST /api/locations` with the login token (added automatically by `frontend/services/api.js`).
 
 ## How to test your setup
 
