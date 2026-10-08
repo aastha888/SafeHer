@@ -4,7 +4,7 @@ const Location = require('../models/Location');
 // @route   POST /api/locations
 const saveLocation = async (req, res) => {
   try {
-    const { latitude, longitude, accuracy } = req.body;
+        const { latitude, longitude, accuracy, timestamp } = req.body;
 
     if (latitude === undefined || longitude === undefined) {
       return res.status(400).json({
@@ -13,11 +13,23 @@ const saveLocation = async (req, res) => {
       });
     }
 
+        // Use the time the phone read the location. It can be older than "now" when
+    // the phone was offline. Missing, invalid or future times fall back to now.
+    let recordedAt = new Date();
+    if (timestamp !== undefined && timestamp !== null) {
+      const parsed = new Date(timestamp);
+      const fiveMinutesAhead = Date.now() + 5 * 60 * 1000;
+      if (!isNaN(parsed.getTime()) && parsed.getTime() <= fiveMinutesAhead) {
+        recordedAt = parsed;
+      }
+    }
+
     const location = await Location.create({
       user_id: req.user.id,
       latitude,
       longitude,
       accuracy,
+      timestamp: recordedAt,
     });
 
     return res.status(201).json({
