@@ -16,7 +16,7 @@ SafeHer is a women's safety mobile application built as a college major project.
 - **Backend:** Node.js, Express, MongoDB with Mongoose, JWT authentication
 - **Push notifications:** Firebase Cloud Messaging
 - **SMS:** Twilio
-- **Maps and location:** Google Maps, device GPS
+- **Maps and location:** Leaflet with OpenStreetMap, device GPS
 
 ## Project Structure
 

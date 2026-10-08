@@ -95,13 +95,16 @@ Code: `frontend/services/LocationService.js`, `frontend/services/BackendLocation
 
 `expo-location` reads the phone's GPS and needs no API key. It works in Expo Go on an Android phone.
 
-### Map display and the Google Maps key
+### Map display
 
-- `LocationMap.js` draws a real map (marker, accuracy circle, Center and Satellite buttons) using `react-native-maps`.
-- On Android, Google Maps needs an **API key** to download map tiles. Without one the map area stays blank, even though the location itself is correct.
-- Because no key has been set up yet, the Map screen currently shows the coordinates, accuracy, time and an **Open in Google Maps** button, and does not use `LocationMap.js`.
-- To use the real map later: create a Google Cloud project with billing enabled, enable **Maps SDK for Android**, create an API key, restrict it to the app, and add it to `app.json` under `android.config.googleMaps.apiKey`. Then switch `MapScreen.js` to render `LocationMap`.
-- Always restrict the key in Google Cloud (to the Android app and to the Maps SDK only). A key placed in `app.json` ends up inside the built app, so a restriction is what stops others from using it.
+- `LocationMap.js` shows a map inside a `WebView` (package `react-native-webview`) using **Leaflet** with **OpenStreetMap** tiles. It draws a pin, an accuracy circle and a **Center** button, and moves the pin when a new position arrives.
+- It needs **no API key and no billing**, and works in Expo Go. `MapScreen.js` shows this map above the sync status and the **Refresh**, **Google Maps** and **Back** buttons.
+- Why not a Google map: with `react-native-maps` in Expo Go on Android, the map area stayed black on the test phone (the Google logo appeared but there were no tiles and no pin), even when OpenStreetMap tiles were drawn on top. A Google map would need a Google Cloud API key (billing enabled) and a custom development build.
+- The map needs an internet connection, because Leaflet and the tiles are loaded from the web. Without it the map area stays empty.
+- OpenStreetMap's public tile server is meant for light use. The credit "© OpenStreetMap contributors" is shown on the map and must stay. For heavy use or final deployment, switch to a tile provider that allows it.
+- There is no satellite view.
+- `react-native-maps` is still listed in `package.json` but is no longer used. It can be removed later.
+- Possible later upgrade: Google Maps through a development build. That needs the API key in `app.json` under `android.config.googleMaps.apiKey`, restricted in Google Cloud to the Android app and the Maps SDK only.
 
 ### Sending location to the backend
 

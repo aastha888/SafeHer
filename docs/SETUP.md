@@ -48,7 +48,7 @@ Open `.env` and replace each placeholder with a real value.
 | `TWILIO_ACCOUNT_SID` | Twilio account identifier | Twilio Console home page |
 | `TWILIO_AUTH_TOKEN` | Twilio secret token | Twilio Console home page |
 | `TWILIO_PHONE_NUMBER` | Twilio number SMS is sent from | Twilio Console |
-| `GOOGLE_MAPS_API_KEY` | Google Maps key (from Week 2) | Google Cloud Console |
+| `GOOGLE_MAPS_API_KEY` | Optional. Not used at the moment (the map uses OpenStreetMap) | Not needed |
 | `FRONTEND_URL` | Address of the mobile app dev server | Default `http://localhost:8081` |
 
 `backend/config/env.js` checks that the required variables exist and stops the server with a clear message if any are missing.
@@ -118,7 +118,7 @@ If you tapped **Deny** by mistake, open the phone's **Settings > Apps > Expo Go 
 
 ### How location tracking works
 
-- Opening the **Map** screen reads the phone's position and shows the coordinates, accuracy and time.
+- Opening the **Map** screen reads the phone's position and shows it on a map, with the accuracy and time.
 - While the screen stays open, the app checks the position every 30 seconds and sends it to the backend (`POST /api/locations`).
 - If the phone has moved less than 10 metres since the last send, the check is skipped and the status line shows how far it moved.
 - Leaving the screen stops the tracking. Tracking does not continue in the background yet.
@@ -139,7 +139,7 @@ If you tapped **Deny** by mistake, open the phone's **Settings > Apps > Expo Go 
 | Permission popup never appears, or "Location permission was denied" | Allow location for Expo Go in the phone's settings, then tap **Try Again** |
 | "Location is turned off" | Turn on GPS in the phone's quick settings |
 | Coordinates are far off or accuracy is over 50 m | Go near a window or outside and wait a few seconds. Accuracy is often 15 to 80 m indoors |
-| Map area is blank on Android | The Google Maps tiles need an API key. The Map screen shows coordinates and an **Open in Google Maps** button instead |
+| Map area is empty or grey | The map loads from the internet. Check the phone has a working connection, then tap **Refresh**. The **Google Maps** button still opens your position in the Google Maps app |
 | Status says "Not sent: Cannot reach the server" | Check the phone and computer are on the same Wi-Fi, the backend is running, and `API_BASE_URL` has your current address |
 | Status says "No movement (moved X m, needs 10 m)" | Normal while standing still. Move more than 10 m and wait for the next check |
 | Status says "Offline: saved N location(s)" | The server could not be reached. The locations upload automatically once it can |
