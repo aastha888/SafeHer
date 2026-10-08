@@ -1,35 +1,80 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, FlatList, RefreshControl, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  FlatList,
+  RefreshControl,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+} from 'react-native';
+import NetInfo from '@react-native-community/netinfo';
 
 import ContactCard from '../components/ContactCard';
 import LoadingSpinner from '../components/LoadingSpinner';
 import Button from '../components/Button';
+import AddContactModal from '../components/AddContactModal';
 import colors from '../constants/colors';
 import typography from '../constants/typography';
-import AddContactModal from '../components/AddContactModal';
 import { getContacts, addContact, updateContact, deleteContact } from '../services/ContactService';
+import { getCachedContacts, saveContacts } from '../utils/caching';
 
 export default function EmergencyContactsScreen({ navigation }) {
   const [contacts, setContacts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
+  const [syncStatus, setSyncStatus] = useState(''); // '', 'cached', 'syncing', 'synced'
+
   const [modalVisible, setModalVisible] = useState(false);
   const [editingContact, setEditingContact] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
 
   const loadContacts = useCallback(async (isRefresh = false) => {
-    if (isRefresh) setRefreshing(true);
-    else setLoading(true);
-    setError('');
+    // Step 1: show cached data immediately (only on first load, not pull-to-refresh)
+    if (!isRefresh) {
+      const cached = await getCachedContacts();
+      if (cached.length > 0) {
+        setContacts(cached);
+        setSyncStatus('cached');
+        setLoading(false);
+      } else {
+        setLoading(true);
+      }
+    } else {
+      setRefreshing(true);
+    }
 
+    // Step 2: check connectivity before hitting the API
+    const netState = await NetInfo.fetch();
+    if (!netState.isConnected) {
+      setError('You are offline. Showing cached data.');
+      setSyncStatus('cached');
+      setLoading(false);
+      setRefreshing(false);
+      return;
+    }
+
+    // Step 3: fetch fresh data from the API
+    setSyncStatus('syncing');
+    setError('');
     const result = await getContacts();
 
     if (result.success) {
       setContacts(result.data);
+      setSyncStatus('synced');
     } else {
-      setError(result.error);
+      // API failed even though we're "online" (e.g. backend is down)
+      const cached = await getCachedContacts();
+      if (cached.length > 0) {
+        setContacts(cached);
+        setSyncStatus('cached');
+        setError(`${result.error} Showing cached data.`);
+      } else {
+        setError(result.error);
+        setSyncStatus('');
+      }
     }
 
     setLoading(false);
@@ -40,8 +85,7 @@ export default function EmergencyContactsScreen({ navigation }) {
     loadContacts();
   }, [loadContacts]);
 
-  
-   const handleAdd = () => {
+  const handleAdd = () => {
     setEditingContact(null);
     setSubmitError('');
     setModalVisible(true);
@@ -65,7 +109,11 @@ export default function EmergencyContactsScreen({ navigation }) {
           onPress: async () => {
             const result = await deleteContact(contact._id);
             if (result.success) {
-              setContacts((prev) => prev.filter((c) => c._id !== contact._id));
+              setContacts((prev) => {
+                const updated = prev.filter((c) => c._id !== contact._id);
+                saveContacts(updated);
+                return updated;
+              });
             } else {
               Alert.alert('Error', result.error);
             }
@@ -91,11 +139,17 @@ export default function EmergencyContactsScreen({ navigation }) {
     }
 
     if (editingContact) {
-      setContacts((prev) =>
-        prev.map((c) => (c._id === editingContact._id ? result.data : c))
-      );
+      setContacts((prev) => {
+        const updated = prev.map((c) => (c._id === editingContact._id ? result.data : c));
+        saveContacts(updated);
+        return updated;
+      });
     } else {
-      setContacts((prev) => [...prev, result.data]);
+      setContacts((prev) => {
+        const updated = [...prev, result.data];
+        saveContacts(updated);
+        return updated;
+      });
     }
 
     setModalVisible(false);
@@ -126,6 +180,16 @@ export default function EmergencyContactsScreen({ navigation }) {
         <Text style={styles.title}>Emergency Contacts</Text>
         <View style={{ width: 50 }} />
       </View>
+
+      {syncStatus ? (
+        <View style={styles.syncBar}>
+          <Text style={styles.syncText}>
+            {syncStatus === 'cached' && '📦 Showing cached data'}
+            {syncStatus === 'syncing' && '🔄 Syncing...'}
+            {syncStatus === 'synced' && '✅ Up to date'}
+          </Text>
+        </View>
+      ) : null}
 
       {error ? (
         <View style={styles.errorBox}>
@@ -160,7 +224,7 @@ export default function EmergencyContactsScreen({ navigation }) {
 
       {loading ? <LoadingSpinner text="Loading contacts..." /> : null}
 
-            <AddContactModal
+      <AddContactModal
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
         onSubmit={handleModalSubmit}
@@ -169,7 +233,6 @@ export default function EmergencyContactsScreen({ navigation }) {
         submitError={submitError}
       />
     </View>
-
   );
 }
 
@@ -188,6 +251,8 @@ const styles = StyleSheet.create({
   },
   back: { ...typography.body, color: colors.primary, fontWeight: '600' },
   title: { ...typography.title, color: colors.text },
+  syncBar: { paddingHorizontal: 16, paddingTop: 10 },
+  syncText: { ...typography.small, color: colors.textLight },
   list: { padding: 16, paddingBottom: 100, flexGrow: 1 },
   errorBox: {
     backgroundColor: '#FDECEA',

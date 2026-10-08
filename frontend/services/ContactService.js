@@ -1,4 +1,5 @@
 import api from './api';
+import { saveContacts } from '../utils/caching';
 
 // Same return shape as login/register: { success, data, error }
 const getErrorMessage = (error) => {
@@ -19,7 +20,9 @@ const getErrorMessage = (error) => {
 export const getContacts = async () => {
   try {
     const response = await api.get('/contacts');
-    return { success: true, data: response.data.contacts || [], error: '' };
+    const contacts = response.data.contacts || [];
+    await saveContacts(contacts); // keep the cache fresh
+    return { success: true, data: contacts, error: '' };
   } catch (error) {
     return { success: false, data: [], error: getErrorMessage(error) };
   }
