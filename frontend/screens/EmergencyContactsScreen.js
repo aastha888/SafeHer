@@ -1,25 +1,23 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import {
-  View,
-  Text,
-  FlatList,
-  RefreshControl,
-  StyleSheet,
-  TouchableOpacity,
-} from 'react-native';
+import { View, Text, FlatList, RefreshControl, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 
 import ContactCard from '../components/ContactCard';
 import LoadingSpinner from '../components/LoadingSpinner';
 import Button from '../components/Button';
 import colors from '../constants/colors';
 import typography from '../constants/typography';
-import { getContacts } from '../services/ContactService';
+import AddContactModal from '../components/AddContactModal';
+import { getContacts, addContact, updateContact, deleteContact } from '../services/ContactService';
 
 export default function EmergencyContactsScreen({ navigation }) {
   const [contacts, setContacts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
+  const [modalVisible, setModalVisible] = useState(false);
+  const [editingContact, setEditingContact] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
 
   const loadContacts = useCallback(async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
@@ -42,10 +40,66 @@ export default function EmergencyContactsScreen({ navigation }) {
     loadContacts();
   }, [loadContacts]);
 
-  // Placeholders: wired to the real modal and API tomorrow (Day 9)
-  const handleAdd = () => alert('Add Contact form comes tomorrow (Day 9)');
-  const handleEdit = (contact) => alert(`Edit form for ${contact.name} comes tomorrow (Day 9)`);
-  const handleDelete = (contact) => alert(`Delete for ${contact.name} comes tomorrow (Day 9)`);
+  
+   const handleAdd = () => {
+    setEditingContact(null);
+    setSubmitError('');
+    setModalVisible(true);
+  };
+
+  const handleEdit = (contact) => {
+    setEditingContact(contact);
+    setSubmitError('');
+    setModalVisible(true);
+  };
+
+  const handleDelete = (contact) => {
+    Alert.alert(
+      'Delete Contact',
+      `Remove ${contact.name} from your emergency contacts?`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            const result = await deleteContact(contact._id);
+            if (result.success) {
+              setContacts((prev) => prev.filter((c) => c._id !== contact._id));
+            } else {
+              Alert.alert('Error', result.error);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleModalSubmit = async (formData) => {
+    setSubmitting(true);
+    setSubmitError('');
+
+    const result = editingContact
+      ? await updateContact(editingContact._id, formData)
+      : await addContact(formData);
+
+    setSubmitting(false);
+
+    if (!result.success) {
+      setSubmitError(result.error);
+      return;
+    }
+
+    if (editingContact) {
+      setContacts((prev) =>
+        prev.map((c) => (c._id === editingContact._id ? result.data : c))
+      );
+    } else {
+      setContacts((prev) => [...prev, result.data]);
+    }
+
+    setModalVisible(false);
+  };
 
   const renderEmpty = () => {
     if (loading) return null;
@@ -105,7 +159,17 @@ export default function EmergencyContactsScreen({ navigation }) {
       </View>
 
       {loading ? <LoadingSpinner text="Loading contacts..." /> : null}
+
+            <AddContactModal
+        visible={modalVisible}
+        onClose={() => setModalVisible(false)}
+        onSubmit={handleModalSubmit}
+        editingContact={editingContact}
+        submitting={submitting}
+        submitError={submitError}
+      />
     </View>
+
   );
 }
 

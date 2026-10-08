@@ -30,3 +30,16 @@ export const validateConfirmPassword = (password, confirmPassword) => {
   if (password !== confirmPassword) return 'Passwords do not match';
   return '';
 };
+
+export const validateContactName = (name) => {
+  if (!name.trim()) return 'Contact name is required';
+  if (name.trim().length < 2) return 'Name must be at least 2 characters';
+  return '';
+};
+
+export const validateContactPhone = (phone) => {
+  if (!phone.trim()) return 'Phone number is required';
+  const phoneRegex = /^\+?[0-9]{10,13}$/;
+  if (!phoneRegex.test(phone.trim())) return 'Enter a valid phone number (10-13 digits)';
+  return '';
+};
