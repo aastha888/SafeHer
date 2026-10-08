@@ -288,12 +288,13 @@ All routes below require `Authorization: Bearer <token>`. Location data is autom
 **Request Body:**
 ```json
 {
-  "latitude": 19.0760,
+    "latitude": 19.0760,
   "longitude": 72.8777,
-  "accuracy": 10
+  "accuracy": 10,
+  "timestamp": 1760000000000
 }
 ```
-`accuracy` (meters) is optional.
+`accuracy` (meters) is optional. `timestamp` is optional too: the time the position was read, as milliseconds since 1970 or an ISO date string. It lets a phone that was offline upload old positions with their real time. If it is missing, invalid, or more than 5 minutes in the future, the server uses its own current time.
 
 **Success Response (201):** Returns the created `location` object.
 

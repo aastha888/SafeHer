@@ -20,10 +20,11 @@ const getErrorMessage = (error) => {
 // Returns { success, data, error }
 export const sendLocation = async (location) => {
   try {
-    const response = await api.post('/locations', {
+       const response = await api.post('/locations', {
       latitude: location.latitude,
       longitude: location.longitude,
       accuracy: location.accuracy,
+      timestamp: location.timestamp,
     });
     return { success: true, data: response.data, error: '' };
   } catch (error) {

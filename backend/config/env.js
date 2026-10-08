@@ -1,25 +1,41 @@
 require('dotenv').config();
 
-const required = [
-  'MONGODB_URI',
-  'JWT_SECRET',
+const nodeEnv = process.env.NODE_ENV || 'development';
+const isProduction = nodeEnv === 'production';
+
+// The server cannot work at all without these.
+const coreVars = ['MONGODB_URI', 'JWT_SECRET'];
+
+// Third-party services: required in production, only a warning in development.
+const serviceVars = [
   'FIREBASE_SERVICE_ACCOUNT',
   'TWILIO_ACCOUNT_SID',
   'TWILIO_AUTH_TOKEN',
   'TWILIO_PHONE_NUMBER',
 ];
 
-const missing = required.filter((key) => !process.env[key]);
-
-if (missing.length > 0) {
+const missingCore = coreVars.filter((key) => !process.env[key]);
+if (missingCore.length > 0) {
   throw new Error(
-    `Missing required environment variables: ${missing.join(', ')}. ` +
+    `Missing required environment variables: ${missingCore.join(', ')}. ` +
     'Copy .env.example to .env and fill in the values.'
   );
 }
 
+const missingServices = serviceVars.filter((key) => !process.env[key]);
+if (missingServices.length > 0) {
+  const message =
+    `Missing service variables: ${missingServices.join(', ')}. ` +
+    'Push notifications and SMS will not work.';
+  if (isProduction) {
+    throw new Error(message);
+  }
+  console.warn(`Warning: ${message}`);
+}
+
 module.exports = {
-  nodeEnv: process.env.NODE_ENV || 'development',
+  nodeEnv,
+  isProduction,
   port: process.env.PORT || 5000,
   mongodbUri: process.env.MONGODB_URI,
   jwtSecret: process.env.JWT_SECRET,
