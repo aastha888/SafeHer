@@ -19,6 +19,7 @@ api.interceptors.request.use(async (config) => {
 
 // Turns any axios error into a readable message
 const getErrorMessage = (error) => {
+  console.log('API ERROR:', error.message, error.code, error.config?.baseURL, error.config?.url);
   if (error.response) {
     // Server replied with an error status (400, 401, 500...)
     return (
