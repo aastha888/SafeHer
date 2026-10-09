@@ -1,6 +1,6 @@
 const SOSAlert = require('../models/SOSAlert');
 const EmergencyContact = require('../models/EmergencyContact');
-
+const { notifyContacts } = require('../services/SOSNotificationService');
 const TRIGGER_TYPES = ['button', 'voice', 'shake', 'auto'];
 
 // Returns { latitude, longitude, accuracy } as numbers, or null if invalid
@@ -92,6 +92,13 @@ const triggerSOS = async (req, res) => {
       throw error;
     }
 
+        // Send SMS in the background; the response below does not wait for it
+    if (alert.notifications.length > 0) {
+      notifyContacts(alert._id).catch((err) =>
+        console.error('Notify contacts error:', err.message)
+      );
+    }
+    
     return res.status(201).json({
       success: true,
       already_active: false,
