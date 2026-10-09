@@ -1,5 +1,23 @@
 const EmergencyContact = require('../models/EmergencyContact');
 
+const MAX_CONTACTS = 5;
+
+// Turns Mongoose validation / duplicate errors into proper 400 / 409 responses
+const handleWriteError = (error, res, fallbackMessage) => {
+  if (error.code === 11000) {
+    return res.status(409).json({
+      success: false,
+      message: 'You already have a contact with this phone number',
+    });
+  }
+  if (error.name === 'ValidationError') {
+    const message = Object.values(error.errors).map((e) => e.message).join(', ');
+    return res.status(400).json({ success: false, message });
+  }
+  console.error(fallbackMessage, error.message);
+  return res.status(500).json({ success: false, message: fallbackMessage });
+};
+
 // @desc    Get all emergency contacts for the logged-in user
 // @route   GET /api/contacts
 const getContacts = async (req, res) => {
@@ -32,6 +50,15 @@ const addContact = async (req, res) => {
       });
     }
 
+    // Limit: at most 5 contacts per user
+    const count = await EmergencyContact.countDocuments({ user_id: req.user.id });
+    if (count >= MAX_CONTACTS) {
+      return res.status(400).json({
+        success: false,
+        message: `You can add at most ${MAX_CONTACTS} emergency contacts`,
+      });
+    }
+
     // If this contact is marked primary, un-mark any existing primary contact
     if (is_primary) {
       await EmergencyContact.updateMany(
@@ -53,11 +80,7 @@ const addContact = async (req, res) => {
       contact,
     });
   } catch (error) {
-    console.error('Add contact error:', error.message);
-    return res.status(500).json({
-      success: false,
-      message: 'Server error while adding contact',
-    });
+    return handleWriteError(error, res, 'Server error while adding contact');
   }
 };
 
@@ -96,11 +119,7 @@ const updateContact = async (req, res) => {
       contact,
     });
   } catch (error) {
-    console.error('Update contact error:', error.message);
-    return res.status(500).json({
-      success: false,
-      message: 'Server error while updating contact',
-    });
+    return handleWriteError(error, res, 'Server error while updating contact');
   }
 };
 
