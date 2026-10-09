@@ -7,6 +7,7 @@ const authRoutes = require('./routes/auth');
 const contactRoutes = require('./routes/contacts');
 const userRoutes = require('./routes/users');
 const locationRoutes = require('./routes/locations');
+const deviceRoutes = require('./routes/devices');
 
 // Connect to MongoDB
 connectDB();
@@ -33,6 +34,9 @@ app.use('/api/users', userRoutes);
 
 // Location routes
 app.use('/api/locations', locationRoutes);
+
+// Device routes (push notification tokens)
+app.use('/api/devices', deviceRoutes);
 
 // Temporary test route to verify JWT middleware
 app.get('/test-auth', authenticate, (req, res) => {
