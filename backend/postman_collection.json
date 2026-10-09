@@ -1,232 +1,417 @@
 {
   "info": {
+    "_postman_id": "4aa221a2-a158-4324-ab99-dbd904910fbc",
     "name": "SafeHer API",
     "description": "Postman collection for SafeHer backend endpoints",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "57456064",
+    "_collection_link": "https://go.postman.co/collection/57456064-4aa221a2-a158-4324-ab99-dbd904910fbc?source=collection_link"
   },
-  "variable": [
-    { "key": "base_url", "value": "http://localhost:5000/api", "type": "string" },
-    { "key": "token", "value": "", "type": "string" },
-    { "key": "contact_id", "value": "", "type": "string" }
-  ],
   "item": [
     {
       "name": "Auth",
       "item": [
         {
           "name": "Register",
-          "request": {
-            "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\",\n  \"phone\": \"1234567890\",\n  \"full_name\": \"Jane Doe\"\n}"
-            },
-            "url": { "raw": "{{base_url}}/auth/register", "host": ["{{base_url}}"], "path": ["auth", "register"] }
-          },
           "event": [
             {
               "listen": "test",
               "script": {
+                "type": "text/javascript",
                 "exec": [
-                  "if (pm.response.code === 201) {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.collectionVariables.set('token', jsonData.token);",
-                  "}"
-                ],
-                "type": "text/javascript"
+                  "if (pm.response.code === 201) {\n    var jsonData = pm.response.json();\n    pm.collectionVariables.set('token', jsonData.token);\n}"
+                ]
               }
             }
-          ]
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"postmantest@example.com\",\n  \"password\": \"password123\",\n  \"phone\": \"1234567890\",\n  \"full_name\": \"Jane Doe\"\n}",
+              "options": {
+                "raw": {
+                  "language": "text"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/register",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "register"
+              ]
+            }
+          },
+          "response": []
         },
         {
           "name": "Login",
-          "request": {
-            "method": "POST",
-            "header": [{ "key": "Content-Type", "value": "application/json" }],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"password123\"\n}"
-            },
-            "url": { "raw": "{{base_url}}/auth/login", "host": ["{{base_url}}"], "path": ["auth", "login"] }
-          },
           "event": [
             {
               "listen": "test",
               "script": {
+                "type": "text/javascript",
                 "exec": [
-                  "if (pm.response.code === 200) {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.collectionVariables.set('token', jsonData.token);",
-                  "}"
-                ],
-                "type": "text/javascript"
+                  "if (pm.response.code === 200) {\n    var jsonData = pm.response.json();\n    pm.collectionVariables.set('token', jsonData.token);\n}"
+                ]
               }
             }
-          ]
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"postmantest@example.com\",\n  \"password\": \"password123\"\n}",
+              "options": {
+                "raw": {
+                  "language": "text"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
         },
         {
           "name": "Test Auth (protected route example)",
           "request": {
             "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
-            "url": {
-              "raw": "http://localhost:5000/test-auth",
-              "protocol": "http",
-              "host": ["localhost"],
-              "port": "5000",
-              "path": ["test-auth"]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "User Profile",
-      "item": [
-        {
-          "name": "Get Profile",
-          "request": {
-            "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
-            "url": { "raw": "{{base_url}}/users/profile", "host": ["{{base_url}}"], "path": ["users", "profile"] }
-          }
-        },
-        {
-          "name": "Update Profile",
-          "request": {
-            "method": "PUT",
             "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" },
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "body": { "mode": "raw", "raw": "{\n  \"full_name\": \"New Name\",\n  \"phone\": \"9998887777\"\n}" },
-            "url": { "raw": "{{base_url}}/users/profile", "host": ["{{base_url}}"], "path": ["users", "profile"] }
-          }
-        },
-        {
-          "name": "Delete Account",
-          "request": {
-            "method": "DELETE",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
-            "url": { "raw": "{{base_url}}/users/account", "host": ["{{base_url}}"], "path": ["users", "account"] }
-          }
-        }
-      ]
-    },
-    {
-      "name": "Emergency Contacts",
-      "item": [
-        {
-          "name": "List Contacts",
-          "request": {
-            "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
-            "url": { "raw": "{{base_url}}/contacts", "host": ["{{base_url}}"], "path": ["contacts"] }
-          }
-        },
-        {
-          "name": "Add Contact",
-          "request": {
-            "method": "POST",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" },
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Mom\",\n  \"phone\": \"9876543210\",\n  \"relationship\": \"Mother\",\n  \"is_primary\": true\n}"
-            },
-            "url": { "raw": "{{base_url}}/contacts", "host": ["{{base_url}}"], "path": ["contacts"] }
-          },
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "if (pm.response.code === 201) {",
-                  "    var jsonData = pm.response.json();",
-                  "    pm.collectionVariables.set('contact_id', jsonData.contact._id);",
-                  "}"
-                ],
-                "type": "text/javascript"
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
               }
+            ],
+            "url": {
+              "raw": "{{base_url}}/test-auth",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "test-auth"
+              ]
             }
-          ]
+          },
+          "response": []
         },
         {
-          "name": "Update Contact",
+          "name": "Get Contact",
           "request": {
-            "method": "PUT",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" },
-              { "key": "Content-Type", "value": "application/json" }
-            ],
-            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Mom Updated\"\n}" },
+            "method": "GET",
+            "header": [],
             "url": {
-              "raw": "{{base_url}}/contacts/{{contact_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["contacts", "{{contact_id}}"]
+              "raw": "{{base_url}}/api/contacts",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "contacts"
+              ]
             }
-          }
+          },
+          "response": []
         },
         {
           "name": "Delete Contact",
           "request": {
             "method": "DELETE",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "header": [],
             "url": {
-              "raw": "{{base_url}}/contacts/{{contact_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["contacts", "{{contact_id}}"]
+              "raw": "{{base_url}}/api/contacts/6ac7bfd26d343d224b376e7c",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "contacts",
+                "6ac7bfd26d343d224b376e7c"
+              ]
             }
-          }
+          },
+          "response": []
+        },
+        {
+          "name": "Add Contact",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "   {\r\n     \"name\": \"Me\",\r\n     \"phone\": \"9876543210\",\r\n     \"relationship\": \"self\",\r\n     \"is_primary\": true\r\n   }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/contacts",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "contacts"
+              ]
+            }
+          },
+          "response": []
         }
       ]
     },
     {
-      "name": "Location Tracking",
+      "name": "SOS",
       "item": [
         {
-          "name": "Save Location",
+          "name": "Add Location Update",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "POST",
-            "header": [
-              { "key": "Authorization", "value": "Bearer {{token}}" },
-              { "key": "Content-Type", "value": "application/json" }
-            ],
+            "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"latitude\": 19.0760,\n  \"longitude\": 72.8777,\n  \"accuracy\": 10\n}"
+              "raw": "{ \"latitude\": 28.6150, \"longitude\": 77.2100, \"accuracy\": 8 }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
-            "url": { "raw": "{{base_url}}/locations", "host": ["{{base_url}}"], "path": ["locations"] }
-          }
-        },
-        {
-          "name": "Get Latest Location",
-          "request": {
-            "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
-            "url": { "raw": "{{base_url}}/locations/latest", "host": ["{{base_url}}"], "path": ["locations", "latest"] }
-          }
-        },
-        {
-          "name": "Get Location History",
-          "request": {
-            "method": "GET",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
             "url": {
-              "raw": "{{base_url}}/locations/history?hours=24&page=1",
-              "host": ["{{base_url}}"],
-              "path": ["locations", "history"],
-              "query": [
-                { "key": "hours", "value": "24" },
-                { "key": "page", "value": "1" }
+              "raw": "{{baseUrl}}/api/sos/{{alertId}}/location",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "sos",
+                "{{alertId}}",
+                "location"
               ]
             }
-          }
+          },
+          "response": []
+        },
+        {
+          "name": "Cancel SOS",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/sos/{{alertId}}/cancel",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "sos",
+                "{{alertId}}",
+                "cancel"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Resolve SOS",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"outcome\": \"false_alarm\" }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/sos/{{alertId}}/resolve",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "sos",
+                "{{alertId}}",
+                "resolve"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Active SOS",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/sos/active",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "sos",
+                "active"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "SOS History",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/sos/history",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "sos",
+                "history"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get SOS By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/sos/{{alertId}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "sos",
+                "{{alertId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Trigger SOS",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const res = pm.response.json();\r\nif (res.alert && res.alert._id) {\r\n  pm.collectionVariables.set(\"alertId\", res.alert._id);\r\n}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"latitude\": 28.6139,\r\n  \"longitude\": 77.2090,\r\n  \"accuracy\": 12,\r\n  \"trigger_type\": \"button\",\r\n  \"message\": \"Test alert\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/sos/trigger",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "sos",
+                "trigger"
+              ]
+            }
+          },
+          "response": []
         }
       ]
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5000/api"
+    },
+    {
+      "key": "token",
+      "secret": true
+    },
+    {
+      "key": "baseUrl",
+      "value": ""
+    },
+    {
+      "key": "alertId",
+      "value": ""
     }
   ]
 }
