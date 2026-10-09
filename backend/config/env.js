@@ -33,6 +33,12 @@ if (missingServices.length > 0) {
   console.warn(`Warning: ${message}`);
 }
 
+
+// Test mode would silently skip real SMS, so it must never run in production.
+if (isProduction && process.env.SMS_MODE === 'log') {
+  throw new Error('SMS_MODE=log is for testing only and must not be set in production.');
+}
+
 module.exports = {
   nodeEnv,
   isProduction,

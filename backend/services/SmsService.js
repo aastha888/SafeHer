@@ -15,6 +15,15 @@ function getClient() {
 
 const MAX_SMS_LENGTH = 600;
 
+
+// Hide the middle of a phone number, e.g. +919820375667 -> +91******5667
+function maskPhone(phone) {
+  if (!phone || phone.length < 7) {
+    return '****';
+  }
+  return phone.slice(0, 3) + '*'.repeat(phone.length - 7) + phone.slice(-4);
+}
+
 const templates = {
   emergencySOS: (userName, mapLink) =>
     `EMERGENCY: ${userName} has triggered an SOS on SafeHer and needs help. Live location: ${mapLink}`,
@@ -40,6 +49,12 @@ async function sendSMS(toPhoneNumber, message) {
     return { success: false, messageSid: null, error: `Message too long (max ${MAX_SMS_LENGTH} characters)` };
   }
 
+   // Test mode: log the message instead of sending it (no Twilio values needed)
+  if (process.env.SMS_MODE === 'log') {
+    console.log(`[SMS test mode] To ${maskPhone(toPhoneNumber)}: ${message}`);
+    return { success: true, messageSid: 'test-mode', error: null };
+  }
+
   try {
     const from = process.env.TWILIO_PHONE_NUMBER;
     if (!from) {
@@ -56,4 +71,4 @@ async function sendSMS(toPhoneNumber, message) {
   }
 }
 
-module.exports = { sendSMS, templates };
+module.exports = { sendSMS, templates, maskPhone };

@@ -8,6 +8,8 @@ const contactRoutes = require('./routes/contacts');
 const userRoutes = require('./routes/users');
 const locationRoutes = require('./routes/locations');
 const sosRoutes = require('./routes/sos');
+const deviceRoutes = require('./routes/devices');
+
 // Connect to MongoDB
 connectDB();
 
@@ -36,6 +38,10 @@ app.use('/api/locations', locationRoutes);
 
 // SOS routes
 app.use('/api/sos', sosRoutes);
+
+// Device routes (push notification tokens)
+app.use('/api/devices', deviceRoutes);
+
 // Temporary test route to verify JWT middleware
 app.get('/test-auth', authenticate, (req, res) => {
   res.json({ success: true, message: 'You are authenticated!', userId: req.user.id });
