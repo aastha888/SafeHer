@@ -1,6 +1,8 @@
 const SOSAlert = require('../models/SOSAlert');
 const User = require('../models/User');
 const { sendSMS, templates } = require('./SmsService');
+const { notifyContactsByPhone } = require('./PushService');
+
 
 const DEFAULT_COUNTRY_CODE = process.env.DEFAULT_COUNTRY_CODE || '+91';
 
@@ -40,6 +42,17 @@ async function notifyContacts(alertId) {
   const user = await User.findById(alert.user_id);
   const userName = user ? user.full_name : 'A SafeHer user';
   const mapLink = buildMapLink(alert.location.latitude, alert.location.longitude);
+
+  // Push runs alongside SMS (not awaited), so it fires even if SMS fails
+  notifyContactsByPhone(
+    alert.notifications.map((n) => toInternational(n.phone)),
+    {
+      title: `SOS from ${userName}`,
+      body: 'Needs help. Tap to see their live location.',
+      data: { alert_id: String(alertId), map_link: mapLink },
+    },
+    { type: 'sos', sentBy: alert.user_id }
+  ).catch((err) => console.error('Push error:', err.message));
 
   let text = templates.emergencySOS(userName, mapLink);
   if (alert.message) text += ` Note: ${alert.message}`;
