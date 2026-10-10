@@ -6,7 +6,7 @@ const { initFirebase } = require('../config/firebase');
  * @param {string} title - Notification title
  * @param {string} body - Notification body text
  * @param {object} data - Optional key/value data (values must be strings)
- * @returns {Promise<{success: boolean, messageId: string|null, error: string|null}>}
+ * @returns {Promise<{success: boolean, messageId: string|null, error: string|null, code?: string|null}>}
  */
 async function sendPushNotification(deviceToken, title, body, data = {}) {
   if (!deviceToken || !title || !body) {
@@ -23,7 +23,7 @@ async function sendPushNotification(deviceToken, title, body, data = {}) {
     });
     return { success: true, messageId, error: null };
   } catch (err) {
-    return { success: false, messageId: null, error: err.message };
+      return { success: false, messageId: null, error: err.message, code: err.code || null };
   }
 }
 
