@@ -1,6 +1,6 @@
 const User = require('../models/User');
 const EmergencyContact = require('../models/EmergencyContact');
-
+const Location = require('../models/Location');
 // @desc    Get logged-in user's profile
 // @route   GET /api/users/profile
 const getProfile = async (req, res) => {
@@ -77,8 +77,8 @@ const deleteAccount = async (req, res) => {
     }
 
     // Delete related data first
-    await EmergencyContact.deleteMany({ user_id: req.user.id });
-
+        await EmergencyContact.deleteMany({ user_id: req.user.id });
+        await Location.deleteMany({ user_id: req.user.id });
     // Delete the user
     await User.findByIdAndDelete(req.user.id);
 

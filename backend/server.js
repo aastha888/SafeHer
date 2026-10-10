@@ -7,6 +7,7 @@ const authRoutes = require('./routes/auth');
 const contactRoutes = require('./routes/contacts');
 const userRoutes = require('./routes/users');
 const locationRoutes = require('./routes/locations');
+const sosRoutes = require('./routes/sos');
 const deviceRoutes = require('./routes/devices');
 
 // Connect to MongoDB
@@ -34,6 +35,9 @@ app.use('/api/users', userRoutes);
 
 // Location routes
 app.use('/api/locations', locationRoutes);
+
+// SOS routes
+app.use('/api/sos', sosRoutes);
 
 // Device routes (push notification tokens)
 app.use('/api/devices', deviceRoutes);

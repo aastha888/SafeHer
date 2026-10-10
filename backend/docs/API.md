@@ -343,3 +343,142 @@ All routes below require `Authorization: Bearer <token>`. Location data is autom
   }
 }
 ```
+
+---
+
+## SOS Emergency
+
+All SOS endpoints require `Authorization: Bearer <token>`.
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/sos/trigger` | Create an SOS alert and notify emergency contacts |
+| POST | `/sos/:id/location` | Add a live location point to an active alert |
+| POST | `/sos/:id/cancel` | Cancel an active alert (accidental trigger) |
+| POST | `/sos/:id/resolve` | Close an active alert as `resolved` or `false_alarm` |
+| GET | `/sos/active` | Get the current active alert (or `null`) |
+| GET | `/sos/history` | List past alerts, newest first (paginated) |
+| GET | `/sos/:id` | Get one alert with its location trail and SMS results |
+
+**Alert statuses:** `active`, `cancelled`, `resolved`, `false_alarm`.
+A user can have only **one active alert** at a time.
+
+### Trigger an SOS
+
+**POST** `/sos/trigger`
+
+**Request Body:**
+```json
+{
+  "latitude": 28.6139,
+  "longitude": 77.2090,
+  "accuracy": 12,
+  "trigger_type": "button",
+  "message": "Followed by a stranger"
+}
+```
+`latitude` and `longitude` are required. `accuracy`, `trigger_type` (`button`, `voice`, `shake`, `auto`; default `button`) and `message` (max 300 characters) are optional.
+
+**Success Response (201):**
+```json
+{
+  "success": true,
+  "already_active": false,
+  "message": "SOS alert created",
+  "contacts_to_notify": 1,
+  "alert": {
+    "_id": "6ac88edade58f8f1134045c8",
+    "status": "active",
+    "trigger_type": "button",
+    "location": { "latitude": 28.6139, "longitude": 77.209 },
+    "notifications": [
+      { "contact_id": "...", "name": "Me", "phone": "9876543210", "channel": "sms", "status": "pending" }
+    ],
+    "triggered_at": "2026-10-09T06:18:12.033Z"
+  }
+}
+```
+
+**If an alert is already active (200):** returns the existing alert with `"already_active": true`. No new alert and no new SMS are created.
+
+SMS messages are sent in the background. The response shows each notification as `pending`; read `GET /sos/:id` afterwards to see `sent` or `failed` for each contact. If the user has no contacts, the alert is still created and `contacts_to_notify` is `0`.
+
+**Errors:**
+
+| Code | Meaning |
+|------|---------|
+| 400 | Missing or out-of-range coordinates, or invalid `trigger_type` |
+| 401 | Missing or invalid token |
+| 500 | Server error |
+
+### Add a location update
+
+**POST** `/sos/:id/location`
+
+**Request Body:** `{ "latitude": 28.6150, "longitude": 77.2100, "accuracy": 8 }`
+
+**Success Response (200):**
+```json
+{ "success": true, "trail_points": 2, "latest": { "latitude": 28.615, "longitude": 77.21, "accuracy": 8, "recorded_at": "..." } }
+```
+The trail keeps the latest 500 points per alert.
+
+**Errors:** `400` invalid coordinates, `404` alert not found (or not yours), `409` alert is no longer active.
+
+### Cancel an alert
+
+**POST** `/sos/:id/cancel` (no body)
+
+**Success Response (200):** `{ "success": true, "message": "SOS alert cancelled", "alert": { "status": "cancelled", "cancelled_at": "..." } }`
+
+**Errors:** `404` alert not found (or not yours), `409` alert is no longer active.
+
+### Resolve an alert
+
+**POST** `/sos/:id/resolve`
+
+**Request Body:** `{ "outcome": "false_alarm" }` where `outcome` is `resolved` (default) or `false_alarm`.
+
+**Success Response (200):** `{ "success": true, "message": "SOS alert marked as false_alarm", "alert": { "status": "false_alarm", "resolved_at": "..." } }`
+
+**Errors:** `400` invalid outcome, `404` alert not found (or not yours), `409` alert is no longer active.
+
+### Get the active alert
+
+**GET** `/sos/active`
+
+**Success Response (200):** `{ "success": true, "alert": { ... } }`, or `"alert": null` when there is no active alert.
+
+### SOS history
+
+**GET** `/sos/history?page=1&limit=10&status=resolved`
+
+All query parameters are optional. `limit` is at most 50. The location trail is left out of list results (use `GET /sos/:id`).
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "alerts": [ { "_id": "...", "status": "cancelled", "triggered_at": "..." } ],
+  "pagination": { "page": 1, "limit": 10, "total": 3, "totalPages": 1 }
+}
+```
+
+**Errors:** `400` invalid `status` filter.
+
+### Get one alert
+
+**GET** `/sos/:id`
+
+**Success Response (200):** `{ "success": true, "alert": { ...full alert including location_trail and notifications } }`
+
+**Errors:** `404` alert not found (or not yours).
+
+### Example (cURL)
+
+```bash
+curl -X POST http://localhost:5000/api/sos/trigger \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"latitude":28.6139,"longitude":77.2090}'
+```
