@@ -346,6 +346,75 @@ All routes below require `Authorization: Bearer <token>`. Location data is autom
 
 ---
 
+## Devices (push notifications)
+
+Stores the push token of a user's phone, so the backend can send push notifications to it (for example SOS alerts to emergency contacts who use SafeHer). Both routes require a login token.
+
+### Register a device
+
+**POST** `/devices`
+
+**Request Body:**
+```json
+{
+  "token": "<FCM device token>",
+  "platform": "android"
+}
+```
+`token` is required. `platform` is `android` or `ios` and defaults to `android`. Registering the same token again updates the existing record instead of creating a duplicate. If the token was registered by another account, it moves to the current user.
+
+**Success Response (201):**
+```json
+{
+  "success": true,
+  "device": {
+    "_id": "...",
+    "user_id": "...",
+    "token": "<FCM device token>",
+    "platform": "android",
+    "created_at": "...",
+    "updated_at": "..."
+  }
+}
+```
+
+**Error Responses:**
+| Status | Condition |
+|--------|-----------|
+| 400 | Missing token, or platform is not `android` or `ios` |
+| 401 | Missing or invalid login token |
+| 500 | Server error |
+
+### Remove a device
+
+**DELETE** `/devices`
+
+**Request Body:**
+```json
+{
+  "token": "<FCM device token>"
+}
+```
+Removes the token only if it belongs to the logged-in user, for example when the user logs out. It also succeeds if the token is not stored.
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "message": "Device removed"
+}
+```
+
+**Error Responses:**
+| Status | Condition |
+|--------|-----------|
+| 400 | Missing token |
+| 401 | Missing or invalid login token |
+| 500 | Server error |
+
+**Note:** Tokens that Firebase reports as no longer valid (for example after the app is uninstalled) are removed automatically when a push fails.
+
+---
 ## SOS Emergency
 
 All SOS endpoints require `Authorization: Bearer <token>`.
