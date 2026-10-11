@@ -48,6 +48,9 @@ Open `.env` and replace each placeholder with a real value.
 | `TWILIO_ACCOUNT_SID` | Twilio account identifier | Twilio Console home page |
 | `TWILIO_AUTH_TOKEN` | Twilio secret token | Twilio Console home page |
 | `TWILIO_PHONE_NUMBER` | Twilio number SMS is sent from | Twilio Console |
+| `SMS_MODE` | Optional, testing only. `log` prints SMS in the console instead of sending them (the server refuses it in production) | Not needed. See [INTEGRATIONS.md](INTEGRATIONS.md) |
+| `SMS_DRY_RUN` | Optional, testing only. `true` skips Twilio for SOS alerts and marks the SMS as sent | Not needed |
+| `DEFAULT_COUNTRY_CODE` | Optional. Country code added to contact numbers saved without one | Default `+91` |
 | `GOOGLE_MAPS_API_KEY` | Optional. Not used at the moment (the map uses OpenStreetMap) | Not needed |
 | `FRONTEND_URL` | Address of the mobile app dev server | Default `http://localhost:8081` |
 
@@ -81,6 +84,9 @@ Scan the QR code with the Expo Go app on your phone. Your phone and computer mus
 | Port already in use | Change `PORT` in `.env` or stop the other process |
 | App cannot reach the backend | Use your computer's IP address, not `localhost`, when testing on a phone |
 | MongoDB connection fails | Check the connection string and that your IP is allowed in MongoDB Atlas |
+| SOS alert shows an SMS error `Invalid template name...` | Twilio trial accounts cannot send custom text. Set `SMS_MODE=log` to test the flow. See [INTEGRATIONS.md](INTEGRATIONS.md) |
+| Push notifications do not arrive in Expo Go | Expo Go on Android cannot receive remote push (SDK 53 and later). Real delivery needs a development build. The backend side can be tested with fake tokens |
+| `SMS_MODE=log is for testing only and must not be set in production` | Remove `SMS_MODE` from the production environment |
 
 ## Location Services
 

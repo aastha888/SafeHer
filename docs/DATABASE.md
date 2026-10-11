@@ -1,6 +1,6 @@
 # Database Documentation
 
-Maintained by Developer A. Database: MongoDB (Atlas), accessed with Mongoose. Models live in `backend/models/`.
+Maintained by Developer A (the `devicetokens` and `notificationlogs` collections by Developer C). Database: MongoDB (Atlas), accessed with Mongoose. Models live in `backend/models/`.
 
 ## Collections overview
 
@@ -10,6 +10,8 @@ Maintained by Developer A. Database: MongoDB (Atlas), accessed with Mongoose. Mo
 | `emergencycontacts` | `EmergencyContact.js` | People notified during an SOS |
 | `locations` | `Location.js` | GPS history (auto-deleted after 30 days) |
 | `sosalerts` | `SOSAlert.js` | SOS alerts with location trail and SMS results |
+| `devicetokens` | `DeviceToken.js` | Push notification tokens of users' phones |
+| `notificationlogs` | `NotificationLog.js` | Log of push notification attempts (auto-deleted after 90 days) |
 
 ## Relationships
 
@@ -17,6 +19,8 @@ Maintained by Developer A. Database: MongoDB (Atlas), accessed with Mongoose. Mo
 users 1 ──< emergencycontacts   (user_id)
 users 1 ──< locations           (user_id)
 users 1 ──< sosalerts           (user_id)
+users 1 ──< devicetokens        (user_id)
+users 1 ──< notificationlogs    (user_id = notified user, sent_by = sender)
 emergencycontacts 1 ──< sosalerts.notifications[]   (contact_id, copied as a snapshot)
 ```
 
@@ -78,3 +82,37 @@ emergencycontacts 1 ──< sosalerts.notifications[]   (contact_id, copied as a
 **Indexes:**
 - `{ user_id, triggered_at: -1 }` for history queries
 - Unique partial index on `user_id` where `status = "active"`, so the database itself guarantees **one active alert per user**
+
+## devicetokens
+
+| Field | Type | Notes |
+|-------|------|-------|
+| user_id | ObjectId (ref User) | required, indexed |
+| token | String | FCM device token, required, unique, trimmed |
+| platform | String | `android` or `ios` (default `android`) |
+| created_at | Date | set automatically |
+| updated_at | Date | set automatically |
+
+**Indexes:** `user_id`; unique index on `token`.
+
+One user can have several phones, but a token belongs to one user: registering the same token again from another account moves it. Tokens that Firebase reports as invalid or no longer registered are deleted automatically by `PushService`.
+
+## notificationlogs
+
+| Field | Type | Notes |
+|-------|------|-------|
+| user_id | ObjectId (ref User) | the user who was notified, indexed |
+| sent_by | ObjectId (ref User) | the user who triggered it, for example the SOS sender |
+| channel | String | `push` or `sms`, required |
+| type | String | `sos`, `test` or `other` (default `other`) |
+| recipient | String | masked token or phone, for example `abcd...wxyz` |
+| status | String | `sent` or `failed`, required |
+| error | String | reason, when failed |
+| provider_id | String | Firebase's or Twilio's message ID |
+| created_at | Date | set automatically (there is no `updated_at`) |
+
+**Indexes:** `user_id`; TTL index on `created_at` (documents are deleted automatically 90 days after they are created).
+
+**Privacy:** recipients are stored masked and the message text is not stored.
+
+**Note:** only push attempts are written to this collection so far. The SMS result of an SOS alert is stored on the alert itself, in `sosalerts.notifications[]`.
