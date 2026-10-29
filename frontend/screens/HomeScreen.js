@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { Linking } from 'react-native';
+import { getCurrentLocation } from '../services/LocationService';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 
 import colors from '../constants/colors';
@@ -14,9 +16,35 @@ export default function HomeScreen({ navigation }) {
     Alert.alert('SOS', 'SOS feature coming in Week 3');
   };
 
-  const handleShareLocation = () => {
-    Alert.alert('Share Location', 'Location sharing coming once Person C\'s GPS service is ready');
+    const handleShareLocation = () => {
+    if (!location) {
+      Alert.alert('Location not available', 'Please wait for your location to load.');
+      return;
+    }
+    const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${location.latitude},${location.longitude}`;
+    Linking.openURL(mapsUrl);
+    // Note: this opens the location for YOU to share manually (e.g. via WhatsApp's share sheet
+    // after copying the link). Automatically texting emergency contacts is the SOS feature,
+    // coming in your Week 3-4 SOS task.
   };
+
+  const [location, setLocation] = useState(null);
+  const [locationLoading, setLocationLoading] = useState(true);
+  const [locationError, setLocationError] = useState('');
+
+  useEffect(() => {
+    (async () => {
+      setLocationLoading(true);
+      const result = await getCurrentLocation();
+      if (result.success) {
+        setLocation(result.location);
+        setLocationError('');
+      } else {
+        setLocationError(result.error);
+      }
+      setLocationLoading(false);
+    })();
+  }, []);
 
   return (
     <ScrollView style={styles.flex} contentContainerStyle={styles.container}>
@@ -27,7 +55,13 @@ export default function HomeScreen({ navigation }) {
 
       <SafetyStatusCard score={75} />
 
-      <CurrentLocationCard onShareLocation={handleShareLocation} />
+      <CurrentLocationCard
+        location={location}
+        loading={locationLoading}
+        error={locationError}
+        onShareLocation={handleShareLocation}
+        onViewMap={() => navigation.navigate('Map')}
+      />
 
       <Text style={styles.sectionTitle}>Quick Actions</Text>
 
@@ -42,10 +76,6 @@ export default function HomeScreen({ navigation }) {
           variant="secondary"
           onPress={() => navigation.navigate('EmergencyContacts')}
         />
-      </View>
-
-      <View style={styles.gap}>
-        <Button title="Share Location" variant="secondary" onPress={handleShareLocation} />
       </View>
 
       <View style={styles.gap}>
