@@ -7,30 +7,18 @@ import colors from '../constants/colors';
 import typography from '../constants/typography';
 import SafetyStatusCard from '../components/SafetyStatusCard';
 import CurrentLocationCard from '../components/CurrentLocationCard';
+import SOSConfirmModal from '../components/SOSConfirmModal';
 import Button from '../components/Button';
 import { removeToken } from '../utils/storage';
+import { triggerSOS } from '../services/SOSService';
 
 export default function HomeScreen({ navigation }) {
-  const handleSOS = () => {
-    // Real SOS logic comes in Week 3-4 (Task B3/B4 — SOS button UI)
-    Alert.alert('SOS', 'SOS feature coming in Week 3');
-  };
-
-    const handleShareLocation = () => {
-    if (!location) {
-      Alert.alert('Location not available', 'Please wait for your location to load.');
-      return;
-    }
-    const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${location.latitude},${location.longitude}`;
-    Linking.openURL(mapsUrl);
-    // Note: this opens the location for YOU to share manually (e.g. via WhatsApp's share sheet
-    // after copying the link). Automatically texting emergency contacts is the SOS feature,
-    // coming in your Week 3-4 SOS task.
-  };
-
   const [location, setLocation] = useState(null);
   const [locationLoading, setLocationLoading] = useState(true);
   const [locationError, setLocationError] = useState('');
+
+  const [sosModalVisible, setSosModalVisible] = useState(false);
+  const [sosSending, setSosSending] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -45,6 +33,37 @@ export default function HomeScreen({ navigation }) {
       setLocationLoading(false);
     })();
   }, []);
+
+  const handleSOS = () => {
+    setSosModalVisible(true);
+  };
+
+  const handleSOSConfirm = async () => {
+    setSosSending(true);
+    const result = await triggerSOS(location);
+    setSosSending(false);
+    setSosModalVisible(false);
+
+    if (result.success) {
+      Alert.alert('SOS Sent', 'Your emergency contacts have been notified.');
+    } else {
+      Alert.alert('SOS Failed', result.error || 'Could not send SOS. Please try again.');
+    }
+  };
+
+  const handleSOSCancel = () => {
+    if (sosSending) return; // don't allow closing mid-send
+    setSosModalVisible(false);
+  };
+
+  const handleShareLocation = () => {
+    if (!location) {
+      Alert.alert('Location not available', 'Please wait for your location to load.');
+      return;
+    }
+    const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${location.latitude},${location.longitude}`;
+    Linking.openURL(mapsUrl);
+  };
 
   return (
     <ScrollView style={styles.flex} contentContainerStyle={styles.container}>
@@ -96,6 +115,13 @@ export default function HomeScreen({ navigation }) {
           }}
         />
       </View>
+
+      <SOSConfirmModal
+        visible={sosModalVisible}
+        onConfirm={handleSOSConfirm}
+        onCancel={handleSOSCancel}
+        sending={sosSending}
+      />
     </ScrollView>
   );
 }
