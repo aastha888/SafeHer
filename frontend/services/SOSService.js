@@ -26,7 +26,11 @@ export const triggerSOS = async (location) => {
     console.log('[SOSService] Simulated SOS trigger with location:', location);
     return {
       success: true,
-      data: { triggeredAt: new Date().toISOString(), location },
+      data: {
+        id: `local-sos-${Date.now()}`, // real id will come from backend later
+        triggeredAt: new Date().toISOString(),
+        location,
+      },
       error: '',
     };
     // --- END STUB ---

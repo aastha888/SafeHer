@@ -8,9 +8,10 @@ import typography from '../constants/typography';
 import SafetyStatusCard from '../components/SafetyStatusCard';
 import CurrentLocationCard from '../components/CurrentLocationCard';
 import SOSConfirmModal from '../components/SOSConfirmModal';
+import ActiveSOSBanner from '../components/ActiveSOSBanner';
 import Button from '../components/Button';
 import { removeToken } from '../utils/storage';
-import { triggerSOS } from '../services/SOSService';
+import { triggerSOS, cancelSOS } from '../services/SOSService';
 
 export default function HomeScreen({ navigation }) {
   const [location, setLocation] = useState(null);
@@ -19,6 +20,10 @@ export default function HomeScreen({ navigation }) {
 
   const [sosModalVisible, setSosModalVisible] = useState(false);
   const [sosSending, setSosSending] = useState(false);
+
+  // activeSOS holds { id, triggeredAt } while an SOS is live, else null
+  const [activeSOS, setActiveSOS] = useState(null);
+  const [sosCancelling, setSosCancelling] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -35,6 +40,11 @@ export default function HomeScreen({ navigation }) {
   }, []);
 
   const handleSOS = () => {
+    if (activeSOS) {
+      // Already active — no need to open the modal again
+      Alert.alert('SOS Already Active', 'An SOS alert is already in progress.');
+      return;
+    }
     setSosModalVisible(true);
   };
 
@@ -45,6 +55,11 @@ export default function HomeScreen({ navigation }) {
     setSosModalVisible(false);
 
     if (result.success) {
+      // Remember this SOS so the banner can show and later be cancelled
+      setActiveSOS({
+        id: result.data.id || 'local-sos', // real id will come from backend later
+        triggeredAt: result.data.triggeredAt,
+      });
       Alert.alert('SOS Sent', 'Your emergency contacts have been notified.');
     } else {
       Alert.alert('SOS Failed', result.error || 'Could not send SOS. Please try again.');
@@ -52,8 +67,21 @@ export default function HomeScreen({ navigation }) {
   };
 
   const handleSOSCancel = () => {
-    if (sosSending) return; // don't allow closing mid-send
+    if (sosSending) return;
     setSosModalVisible(false);
+  };
+
+  const handleCancelActiveSOS = async () => {
+    setSosCancelling(true);
+    const result = await cancelSOS(activeSOS?.id);
+    setSosCancelling(false);
+
+    if (result.success) {
+      setActiveSOS(null);
+      Alert.alert('SOS Cancelled', 'Your SOS alert has been cancelled.');
+    } else {
+      Alert.alert('Could Not Cancel', result.error || 'Please try again.');
+    }
   };
 
   const handleShareLocation = () => {
@@ -72,6 +100,14 @@ export default function HomeScreen({ navigation }) {
         <Text style={styles.logo}>SafeHer</Text>
       </View>
 
+      {activeSOS && (
+        <ActiveSOSBanner
+          triggeredAt={activeSOS.triggeredAt}
+          onCancel={handleCancelActiveSOS}
+          cancelling={sosCancelling}
+        />
+      )}
+
       <SafetyStatusCard score={75} />
 
       <CurrentLocationCard
@@ -84,9 +120,15 @@ export default function HomeScreen({ navigation }) {
 
       <Text style={styles.sectionTitle}>Quick Actions</Text>
 
-      <TouchableOpacity style={styles.sosButton} onPress={handleSOS} activeOpacity={0.85}>
+      <TouchableOpacity
+        style={[styles.sosButton, activeSOS && styles.sosButtonDisabled]}
+        onPress={handleSOS}
+        activeOpacity={0.85}
+      >
         <Text style={styles.sosText}>🆘 SOS</Text>
-        <Text style={styles.sosSubtext}>Tap to alert your emergency contacts</Text>
+        <Text style={styles.sosSubtext}>
+          {activeSOS ? 'SOS already active' : 'Tap to alert your emergency contacts'}
+        </Text>
       </TouchableOpacity>
 
       <View style={styles.gap}>
@@ -140,6 +182,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 16,
   },
+  sosButtonDisabled: { opacity: 0.5 },
   sosText: { fontSize: 28, fontWeight: '800', color: '#FFFFFF' },
   sosSubtext: { ...typography.small, color: '#FFFFFF', marginTop: 6, opacity: 0.9 },
   gap: { marginBottom: 12 },
